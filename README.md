@@ -109,7 +109,7 @@ The processed dataset will be generated at `./dataset/`.
 
 The preprocessed dataset is hosted on Google Drive:
 
-🔗 [Download Dataset]([https://drive.google.com/drive/folders/1-ypRxNOTqVApmMqW2u9EzwZwSXbTQzc4?usp=drive_link](https://drive.google.com/file/d/1WlkmI9ZFnQ6W0Vugq3-jMrE30Nrfadlf/view?usp=drive_link])
+🔗 [Download Dataset](https://drive.google.com/file/d/1WlkmI9ZFnQ6W0Vugq3-jMrE30Nrfadlf/view?usp=drive_link)
 
 ---
 
