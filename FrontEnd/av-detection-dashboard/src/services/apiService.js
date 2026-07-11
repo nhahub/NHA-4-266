@@ -33,7 +33,7 @@
 
 // ============================================================================
 // CHANGE FASTAPI URL HERE
-// Set VITE_API_URL in a local `.env` file (see `.env.example`) and in your
+// Set VITE_API_URL in a local `.env` file (see `.env`) and in your
 // Vercel project's Environment Variables. Example:
 //   VITE_API_URL=https://your-fastapi-backend.onrender.com
 // Leave it unset to run the UI in standalone/simulation mode.

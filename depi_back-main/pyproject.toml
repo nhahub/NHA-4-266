@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "depi-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "jinja2",
+    "numpy",
+    "opencv-python-headless",
+    "pillow",
+    "pydantic-settings",
+    "python-multipart",
+    "ultralytics",
+    "uvicorn",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

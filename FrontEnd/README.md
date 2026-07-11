@@ -53,7 +53,7 @@ To connect a real backend:
 
 1. Copy `.env.example` to `.env`:
    ```bash
-   cp .env.example .env
+   cp .env .env
    ```
 2. Set `VITE_API_URL` to your FastAPI server's base URL:
    ```
