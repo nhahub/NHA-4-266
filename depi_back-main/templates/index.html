@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>CV Inference Dashboard</title>
+    <style>
+        body { font-family: Tahoma, Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; color: #333; }
+        .node-section { border: 1px solid #ddd; padding: 20px; margin-top: 20px; border-radius: 5px; }
+        .video-container { display: flex; flex-direction: column; align-items: center; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        video, img { max-width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>مشروع معالجة الرؤية الحاسوبية (CV)</h1>
+        
+        <!-- Node 1: Live Camera -->
+        <div class="node-section">
+            <h2>النود الأولى: كاميرا اللاب توب (بث مباشر)</h2>
+            <div class="video-container">
+                <video id="webcam" autoplay playsinline style="display:none;"></video>
+                <img id="processed-frame" src="" alt="Live Processed Frame" />
+                <button id="start-camera">تشغيل الكاميرا</button>
+                <button id="stop-camera" style="display:none; background-color: red;">إيقاف الكاميرا</button>
+            </div>
+        </div>
+
+        <!-- Node 2: Video Upload -->
+        <div class="node-section">
+            <h2>النود الثانية: معالجة ملف فيديو</h2>
+            <form id="upload-form" enctype="multipart/form-data">
+                <input type="file" id="video-file" name="file" accept="video/mp4,video/x-m4v,video/*" required>
+                <button type="submit">رفع ومعالجة</button>
+            </form>
+            <div id="loading" style="display:none; text-align:center; margin-top: 10px;">جاري المعالجة، يرجى الانتظار...</div>
+            <div class="video-container" id="video-result-container" style="display:none;">
+                <h3>الفيديو المعالج:</h3>
+                <video id="processed-video" controls></video>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Node 1: WebSockets for Camera
+        const webcam = document.getElementById('webcam');
+        const processedFrame = document.getElementById('processed-frame');
+        const startBtn = document.getElementById('start-camera');
+        const stopBtn = document.getElementById('stop-camera');
+        let ws;
+        let stream;
+        let intervalId;
+
+        startBtn.onclick = async () => {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            webcam.srcObject = stream;
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+
+            // Connect to WebSocket
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/api/ws/live-camera`);
+            
+            ws.onopen = () => {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Send frame every 100ms
+                intervalId = setInterval(() => {
+                    if (webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
+                        canvas.width = webcam.videoWidth;
+                        canvas.height = webcam.videoHeight;
+                        context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+                        const base64Data = canvas.toDataURL('image/jpeg', 0.8);
+                        ws.send(base64Data);
+                    }
+                }, 100);
+            };
+
+            ws.onmessage = (event) => {
+                processedFrame.src = event.data;
+            };
+        };
+
+        stopBtn.onclick = () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (ws) ws.close();
+            if (intervalId) clearInterval(intervalId);
+            startBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            processedFrame.src = "";
+        };
+
+        // Node 2: Video Upload
+        const uploadForm = document.getElementById('upload-form');
+        const loading = document.getElementById('loading');
+        const resultContainer = document.getElementById('video-result-container');
+        const processedVideo = document.getElementById('processed-video');
+
+        uploadForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('video-file');
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            loading.style.display = 'block';
+            resultContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/video/process-video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    processedVideo.src = url;
+                    resultContainer.style.display = 'flex';
+                } else {
+                    alert("حدث خطأ أثناء المعالجة");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ في الاتصال");
+            } finally {
+                loading.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
